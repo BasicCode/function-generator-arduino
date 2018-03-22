@@ -74,6 +74,9 @@ void setup() {
   displayWaveforms();
   displayFrequency();
   
+  //Start the AD9833 with the new frequency
+  ad9833.setFrequency(waveType, frequency);
+  
   //LED ON to indicate initialisation complete
   digitalWrite(LED_pin, HIGH);
 }
@@ -157,9 +160,6 @@ void displayWaveforms() {
   uLCD.putString(1, 2, 1, 0xFA00, "Sine Wave");
   uLCD.putString(1, 3, 1, 0xFA00, "Triangle Wave");
   uLCD.putString(1, 4, 1, 0xFA00, "Square Wave");
-
-  //Update the device with the request
-  ad9833.setFrequency(waveType, frequency);
 }
 
 /*
@@ -193,9 +193,6 @@ void displayFrequency() {
   int height = 8 * 8 + 2;
   uLCD.Triangle(0, triangle_start, height, triangle_start + 4, height + 4, triangle_start + 8, height, 0x0AC0);
   uLCD.Triangle(0, triangle_start + 4, height + 19, triangle_start, height + 23, triangle_start + 8, height + 23, 0x0AC0);
-
-  //Update the device with the new frequency
-  ad9833.setFrequency(waveType, frequency);
 }
 
 /*
@@ -222,6 +219,9 @@ void nextWaveform() {
 
   //Update the display with the new wave form
   displayWaveforms();
+
+  //Update the device with the request
+  ad9833.setFrequency(waveType, frequency);
 }
 
 /*
@@ -264,21 +264,24 @@ void moveFreqCursor(int move_direction) {
  */
 void incrementFrequency() {
   /*
-   * Because each cursor location is a 10x increase we
-   * can just add the 1 x 10 ^ freq_cursor to the
-   * frequency.
-   * 
-   * (Remember to subtract 10^3 because we are working in KHz)
-   * 
-   * NOTE: pow() returns a float that might not be exactly
-   * the expected result so have to round up.
-   * 
-   * TODO: check output frequency is within bounds.
-   */
-    frequency += round(pow(10, freq_cursor-3));
+  * Because each cursor location is a 10x increase we
+  * can just add the 1 x 10 ^ freq_cursor to the
+  * frequency.
+  * 
+  * (Remember to subtract 10^3 because we are working in KHz)
+  * 
+  * NOTE: pow() returns a float that might not be exactly
+  * the expected result so have to round up.
+  * 
+  * TODO: check output frequency is within bounds.
+  */
+  frequency += round(pow(10, freq_cursor-3));
 
-   //Update the display
-   displayFrequency();
+  //Update the display
+  displayFrequency();
+  
+  //Update the device with the new frequency
+  ad9833.setFrequency(waveType, frequency);
 }
 
 /*
@@ -288,19 +291,21 @@ void incrementFrequency() {
  * (REMEMBER we are wworking in KHz, not Hz)
  */
 void decrementFrequency() {
-
   /*
-   * Decrement the frequency by a power of 10.
-   * pow() returns a float and tends to return 999 
-   * instead of 1000.
-   * 
-   * TODO: check output is within range supported
-   * by the device.
-   */
-    frequency -= round(pow(10, freq_cursor-3));
-
+  * Decrement the frequency by a power of 10.
+  * pow() returns a float and tends to return 999 
+  * instead of 1000.
+  * 
+  * TODO: check output is within range supported
+  * by the device.
+  */
+  frequency -= round(pow(10, freq_cursor-3));
+  
   //Update the display
   displayFrequency();
+  
+  //Update the device with the new frequency
+  ad9833.setFrequency(waveType, frequency);
 }
 
 /*
