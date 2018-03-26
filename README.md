@@ -25,7 +25,7 @@ The square wave output in particular loses fidelity above about **1 MHz**.<br>
 10 MHz sine wave starting to show some inconsistency.<br><br>
 ![picture](images/12mhz-sine-wave.png)<br>
 12.5 MHz sine wave looking very sketchy.<br><br>
-![picture](images/10khz-square-wave.png)<br>
+![picture](images/10khz-square-wave-slew.png)<br>
 10 KHz low frequency square waves are good.<br><br>
 ![picture](images/1mhz-square-wave.png)<br>
 1 MHz square wave is acceptable.<br><br>
