@@ -16,16 +16,16 @@ TODO: write the build instructions with pictures
 
 ## Testing
 The AD9833 datasheet reports an output range of 0 Hz to 12.5 MHz. I found that the output stability and voltage break down quite a lot as frequency approaches 10 MHz, and greatly deteriorate by 12.5 MHz.
-The square wave output in particular loses fidelity above about **1 MHz**.
-![picture](images/100khz-triangle-wave.png)
-100 KHz triangle wave start-up test signal in this program.
-![picture](images/100khz-sine-wave.png)
-100 KHz sine wave looking very clean.
-![picture](images/10mhz-sine-wave.png)
-10 MHz sine wave starting to show some inconsistency.
-![picture](images/12mhz-sine-wave.png)
-12.5 MHz sine wave looking very sketchy.
-![picture](1mhz-square-wave.png)
-1 MHz square wave is acceptable.
-![picture](6mhz-square-wave.png)
-6 MHz square wave is barely square anymore.
+The square wave output in particular loses fidelity above about **1 MHz**.<br>
+![picture](images/100khz-triangle-wave.png)<br>
+100 KHz triangle wave start-up test signal in this program.<br><br>
+![picture](images/100khz-sine-wave.png)<br>
+100 KHz sine wave looking very clean.<br><br>
+![picture](images/10mhz-sine-wave.png)<br>
+10 MHz sine wave starting to show some inconsistency.<br><br>
+![picture](images/12mhz-sine-wave.png)<br>
+12.5 MHz sine wave looking very sketchy.<br><br>
+![picture](images/1mhz-square-wave.png)<br>
+1 MHz square wave is acceptable.<br><br>
+![picture](images/6mhz-square-wave.png)<br>
+6 MHz square wave is barely square anymore.<br>
