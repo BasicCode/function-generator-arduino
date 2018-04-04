@@ -10,7 +10,7 @@ There are two Arduino .INO files included; one for an LCD display, and one for a
 
 ## Installation
 * Download the ZIP file and extract it to your Arduino folder.
-* Download and install the AD9833 library here: https://github.com/BasicCode/AD9833-arduino<br>
+* Download and install the AD9833 library here: https://github.com/BasicCode/AD9833-arduino<br><br>
 Choose an LCD library:
 * Download and install the LCD library here: https://github.com/BasicCode/4DSystems_uLCD-144-G1-arduino
 * The OLED display uses two libraries from Adafruit (Thanks!). The SSD1306 driver: https://github.com/adafruit/Adafruit_SSD1306 and the graphics routines: https://github.com/adafruit/Adafruit-GFX-Library
