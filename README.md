@@ -1,26 +1,22 @@
 # Arduino Function Generator
 
-A function / signal generator based on the AD9833 function generator chip. It uses an LCD screen to display a waveform menu and output frequency, and has 5 input buttons (up, down, left, right, select) which are 
+A function / signal generator based on the AD9833 function generator chip. It uses an OLED screen to display a waveform menu and output frequency, and has 5 input buttons (up, down, left, right, select) which are 
 used to change frequency and waveform.<br>
-There are two Arduino .INO files included; one for an LCD display, and one for an OLED display. Although both have the same result, are written differently to account for different screen behavioiur.<br>
-* function_generator_lcd.ino uses an LCD display and updates only parts of the display that have changed because of a slow, old, LCD driver.
-* function_generator_oled.ino is slightly more simple logic flow and updates the whole display with each user input. I would recommend starting with this version and modifying to suit your needs.
+**Added in Version 1.1** - Can do "sweep mode" by pressing and holding the select button. This will repeatedly sweep through frequencies starting at the selected frequency up to +1 MHz, or +10 MHz.
 <br>
 
 ## Installation
 * Download the ZIP file and extract it to your Arduino folder.
 * Download and install the AD9833 library here: https://github.com/BasicCode/AD9833-arduino
-###Choose a display library:
-* Download and install the LCD library here: https://github.com/BasicCode/4DSystems_uLCD-144-G1-arduino
 * The OLED display uses two libraries from Adafruit (Thanks!). The SSD1306 driver: https://github.com/adafruit/Adafruit_SSD1306 and the graphics routines: https://github.com/adafruit/Adafruit-GFX-Library
 
 ## Build
 ### Prototyping
-Prototyping on a breadboard the LCD and OLED displays should look like this:
-![picture](images/LCD_display.jpg)<br>
-128 x 128 px LCD display example<br><br>
+Prototyping on a breadboard looked like this:
 ![picture](images/OLED_display.jpg)<br>
 128 x 32 px OLED display example.<br>
+This works fine and the extra wire lengths do not seem to disturb the output signal.<br>
+
 ### Fabrication
 I used a program called pcbWeb (http://www.pcbweb.com/) to design the circuit and PCB, then send the files off to one of the distributors included in the program. The whole process was very easy and the 
 printed boards arrived after about 10 days. To my surprise I hadn't made any major mistakes on the board design and the fabrication was flawless. I found that it was cheaper to buy knock-off Arduino Nano

@@ -1,12 +1,17 @@
 
 /**
  * This is a program to drive the AD9833 function generator as a simple
- * signal generator. It used an LCD or OLED screen of your choice
+ * signal generator. It uses a screen of your choice
  * (in this case the SSD1306 OLED driver) to display a frequency selection
  * and waveform selection.
  * 
  * The functions should be easy enough to customise with an LCD driver of
  * your choice.
+ * 
+ * Version 1.0 - Initial Release
+ * Version 1.1 
+ *  - Added "Sweep mode" to cycle through a frequency range
+ *  - Removed LCD LCD version because it wasn't being kept up to date
  */
 
 #include <SPI.h>
@@ -26,6 +31,10 @@
 #define BTN_UP 6
 #define BTN_DOWN 7
 
+//Machine state definitions
+#define NORMAL_MODE 0
+#define SWEEP_MODE 1
+
 //Devices
 Adafruit_SSD1306 display(OLED_RESET);
 AD9833 ad9833;
@@ -33,10 +42,19 @@ AD9833 ad9833;
 //Global state variables
 int cursor_location = 2; //Frequency select cursor position from right
 int frequency = 100; //Frequency in KHz
-uint16_t waveType = TRIANGLE_WAVE;
+uint16_t waveType = TRIANGLE_WAVE; //Wave definition from AD9833 class
+int current_mode = NORMAL_MODE; //Current operating mode, more may be added in future
+int sweep_min_frequency = 100; //Lower bound of frequency range in SWEEP mode
+int sweep_max_frequency = 1000; //Upper bound of frequency range in SWEEP mode
+int sweep_frequency = 100; //Current SWEEP frequency
+double sweep_time = 1000; //Sweep time-span in milliseconds
+long main_loop_timer = 0; //Used for timing events on the main loop
 
 void setup() {
-
+  //Debug system
+  Serial.begin(9600);
+  Serial.println("Debugging...");
+  
   //Initialise the display at I2C address 0x3C.
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.display(); //Displays the current image buffer.
@@ -63,7 +81,7 @@ void setup() {
 void loop() {
   //Wait for a button press
   /*
-   * Left arror pressed. Move cursor left.
+   * Left arrow pressed. Move cursor left.
    */
   if(digitalRead(BTN_LEFT)) {
     //Move the cursor
@@ -96,10 +114,13 @@ void loop() {
    * Up button pressed. Increase frequency.
    */
   if(digitalRead(BTN_UP)) {
-    //Increase Frequency
-    incrementFrequency();
-    //Update the display
-    standardDisplay();
+    //Make sure we are in FREQUENCY mode
+    if(current_mode == NORMAL_MODE) {
+      //Increase Frequency
+      incrementFrequency();
+      //Update the display
+      standardDisplay();
+    }
     //Debounce
     delay(100);
   }
@@ -108,10 +129,13 @@ void loop() {
    * Down button pressed. Decrease frequency.
    */
   if(digitalRead(BTN_DOWN)) {
-    //Decrease Frequency
-    decrementFrequency();
-    //Update the display
-    standardDisplay();
+    //Make sure we are in frequency MODE before changing frequency
+    if(current_mode == NORMAL_MODE) {
+      //Decrease Frequency
+      decrementFrequency();
+      //Update the display
+      standardDisplay();
+    }
     //Short debounce
     delay(100);
   }
@@ -119,15 +143,55 @@ void loop() {
   /*
    * Select button pressed.
    * A short press will cycle to the next waveform.
-   * A long press will change the frequency range High / Low range.
+   * A long press will change to SWEEP mode.
    */
   if(digitalRead(BTN_SEL)) {
-    //Cycle to next waveform
-    nextWaveform();
+    //Time the length of button press
+    long start_time = millis();
+    while(digitalRead(BTN_SEL)); //Good thing this isn't a real-time OS. :)
+    double button_time = millis() - start_time;
+
+    //If it's a short button press then cycle waveform
+    if(button_time < 1500) {
+      nextWaveform();
+    }
+    //If it's a long button press then change MODE
+    if(button_time >= 1500) {
+      switchMode();
+    }
+
+    //Debug
+    Serial.println("Mode: ");
+    Serial.println(current_mode);
+    
     //Update the display
     standardDisplay();
     //Debounce
     delay(250);
+  }
+
+  /*
+   * If the system is in SWEEP MODE then we need to update the frequency
+   * every few millseconds.
+   */
+  if(current_mode == SWEEP_MODE) {
+    //Calculate the amount to increment every 1/100th of a sweep duration
+    int freq_jump = (sweep_max_frequency - sweep_min_frequency) / 100;
+    
+    //If more than 1/100th of a sweep cycle has passed then increment frequency
+    if(millis() - main_loop_timer > (sweep_time / 100.0)) {
+      sweep_frequency += freq_jump;
+  
+      //Check that we aren't out of bounds and reset frequency
+      if(sweep_frequency > sweep_max_frequency)
+        sweep_frequency = sweep_min_frequency;
+  
+      //Update the AD9833 with new frequency. Always use SINE_WAVE
+      ad9833.setFrequency(SINE_WAVE, sweep_frequency);
+
+      //Reset the timer
+      main_loop_timer = millis();
+    }
   }
 }
 
@@ -144,16 +208,22 @@ void loop() {
 void standardDisplay() {
   //Clear the display
   display.clearDisplay();
+
+  //Draw a different screen depending on which mode we are in
+  switch(current_mode) {
+    case(NORMAL_MODE):
+      //Draw the three components of the normal main screen
+      drawWaveform();
+      drawFrequency();
+      drawCursor();
+      break;
+    case(SWEEP_MODE):
+      //Draw the sweep screen
+      drawSweepScreen();
+      break;
+  }
   
-  //Print the wave-form type 
-  drawWaveform();
-
-  //Draw the current frequency on screen
-  drawFrequency();
-
-  //Draw the current cursor on screen
-  drawCursor();
-
+  //update the display
   display.display();
 }
 
@@ -223,6 +293,27 @@ void drawFrequency() {
   if(waveType == SQUARE_WAVE)
     display.println("<    SQUARE WAVE    >");
  }
+
+/*
+ * Draw the SWEEP Mode screen
+ */
+void drawSweepScreen() {
+  //Heading
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+  display.setCursor(4, 0);
+  display.println("Sweep Mode");
+  display.setCursor(0, 16);
+  display.setTextSize(1);
+  //Get the frequency range strings
+  char line1[16];
+  char line2[16];
+  sprintf(line1, "FROM %5d KHz", sweep_min_frequency);
+  sprintf(line2, "TO   %5d KHz", sweep_max_frequency);
+  
+  display.println(line1);
+  display.println(line2);
+}
 
 /*
  * Increments the frequency by an value based on the cursor location.
@@ -314,5 +405,37 @@ void nextWaveform() {
 
   //Update the device with the request
   ad9833.setFrequency(waveType, frequency);
+}
+
+/*
+ * Cycles through the different MODEs and updates the machine state
+ * When entering frequency sweep mode the current frequency will be
+ * used for the lower end of the sweep.
+ */
+void switchMode() {
+  switch(current_mode) {
+    case(NORMAL_MODE):
+      //Use current frequency as lower end frequency
+      sweep_min_frequency = frequency;
+      sweep_frequency = sweep_min_frequency;
+      
+      //Set the max frequency as 1 MHz above the min frequency
+      sweep_max_frequency = frequency + 1000;
+      //OR if the frequency is already in the MHz range then set it 10MHz above
+      if(frequency > 1000)
+        sweep_max_frequency = frequency + 10000;
+      
+      //Make sure not out of range
+      if(sweep_max_frequency > 12500)
+        sweep_max_frequency = 12500;
+      //Finally, change the mode flag
+      current_mode = SWEEP_MODE;
+      break;
+    case(SWEEP_MODE):
+      //Reset the AD9833 back to previous settings
+      ad9833.setFrequency(waveType, frequency);
+      current_mode = NORMAL_MODE;
+      break;
+  }
 }
 
